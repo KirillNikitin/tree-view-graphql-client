@@ -1,0 +1,30 @@
+query getCities(
+  $ciso2: ID!,
+  $sid: Int,
+  $siso: String,
+  $first: Int,
+  $last: Int,
+  $before: String,
+  $after: String
+) {
+  cities(
+    filter: { ciso2: $ciso2, sid: $sid, siso: $siso }
+    page: { first: $first, last: $last, before: $before, after: $after }
+  ) {
+    totalCount
+    edges {
+      cursor
+      node {
+        name
+        state_code
+        country_code
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      endCursor
+      startCursor
+    }
+  }
+}

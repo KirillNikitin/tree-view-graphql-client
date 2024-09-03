@@ -1,0 +1,29 @@
+query getCountry(
+  $id: Int, 
+  $iso2: id,
+  $iso3: id,
+  $numeric_code: id
+  ) {
+  country(id: $id) {
+    # Country Fields
+    id
+    name
+    iso2
+    capital
+    tld
+    states {
+      totalCount
+      edges {
+        cursor
+        node {
+          id
+          name
+        }
+      }
+    }
+    currency
+    currency_symbol
+    emoji
+    # ...
+  }
+}

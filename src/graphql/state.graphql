@@ -1,0 +1,21 @@
+query getState($state_code: String!, $country_code: String!) {
+  state(
+    locationCode: {state_code: $state_code, country_code: $country_code,  }
+    ) {
+    # State Fields
+    id
+    name
+    country_id
+    cities(page: { first: 10 }) {
+      totalCount
+      edges {
+        cursor
+        node {
+          id
+          name
+        }
+      }
+    }
+    # ...
+  }
+}

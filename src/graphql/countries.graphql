@@ -1,0 +1,30 @@
+query getCountries(
+  $region: String, 
+  $subregion: String,
+  $first: Int,
+  $last: Int,
+  $before: String,
+  $after: String
+  ) {
+  countries(
+    filter: { region: $region subregion: $subregion }
+    page: { first: $first, last: $last, before: $before after: $after }
+  ) {
+    totalCount
+    edges {
+      cursor
+      node {
+        id
+        name
+        iso3
+        emoji
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      endCursor
+      startCursor
+    }
+  }
+}

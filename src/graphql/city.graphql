@@ -1,0 +1,12 @@
+query getCityById($id: Int!) {
+  city(id: $id) {
+    # City Fields
+    id
+    name
+    state_id
+    country_id
+    country_code
+    latitude
+    longitude
+  }
+}

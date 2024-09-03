@@ -1,0 +1,30 @@
+query getStates(
+  $cid: ID, 
+  $ciso2: String,
+  $first: Int,
+  $last: Int,
+  $before: String,
+  $after: String) {
+  states(
+    filter: {cid: $cid, ciso2: $ciso2 }
+    page: { first: $first, last: $last, before: $before, after: $after }
+  ) {
+    totalCount
+    edges {
+      cursor
+      node {
+        name
+        state_code
+        country_code
+        latitude
+        longitude
+      }
+    }
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+      endCursor
+      startCursor
+    }
+  }
+}
