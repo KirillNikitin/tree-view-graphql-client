@@ -223,7 +223,6 @@ const TreeItem = React.forwardRef<
                       />
                     </AccordionContent>
                   </AccordionPrimitive.Item>
-
                 ) : (
                   <Leaf
                     item={item}
@@ -245,7 +244,8 @@ const TreeItem = React.forwardRef<
             </li>
           )}
         </ul>
-      </AccordionPrimitive.Root></div>
+      </AccordionPrimitive.Root>
+    </div>
   );
 })
 
