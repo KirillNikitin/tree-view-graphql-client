@@ -171,12 +171,12 @@ const TreeItem = React.forwardRef<
 >(({ className, data, selectedItemId, handleSelectChange, expandedItemIds, FolderIcon, ItemIcon, ...props }, ref) => {
   return (
     <div ref={ref} role="tree" className={className} {...props}>
-      <ul>
-        {data instanceof Array ? (
-          data.map((item) => (
-            <li key={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
-              {item.children ? (
-                <AccordionPrimitive.Root type="multiple" defaultValue={expandedItemIds}>
+      <AccordionPrimitive.Root type="multiple" defaultValue={expandedItemIds}>
+        <ul>
+          {data instanceof Array ? (
+            data.map((item) => (
+              <li key={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
+                {item.children ? (
                   <AccordionPrimitive.Item value={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
                     <AccordionTrigger
                       className={cn(
@@ -210,28 +210,29 @@ const TreeItem = React.forwardRef<
                       />
                     </AccordionContent>
                   </AccordionPrimitive.Item>
-                </AccordionPrimitive.Root>
-              ) : (
-                <Leaf
-                  item={item}
-                  isSelected={selectedItemId === (item.id ?? item.node.id) ?? validateName(item.node.name)}
-                  onClick={() => handleSelectChange(item)}
-                  Icon={ItemIcon}
-                />
-              )}
+                ) : (
+                  <Leaf
+                    item={item}
+                    isSelected={selectedItemId === (item.id ?? item.node.id) ?? validateName(item.node.name)}
+                    onClick={() => handleSelectChange(item)}
+                    Icon={ItemIcon}
+                  />
+                )}
+              </li>
+            ))
+          ) : (
+            <li key={data.id}>
+              <Leaf
+                item={data}
+                isSelected={selectedItemId === (data.id ?? data.node.id) ?? validateName(data.name)}
+                onClick={() => handleSelectChange(data)}
+                Icon={ItemIcon}
+              />
             </li>
-          ))
-        ) : (
-          <li key={data.id}>
-            <Leaf
-              item={data}
-              isSelected={selectedItemId === (data.id ?? data.node.id) ?? validateName(data.name)}
-              onClick={() => handleSelectChange(data)}
-              Icon={ItemIcon}
-            />
-          </li>
-        )}
-      </ul></div>
+          )}
+        </ul>
+      </AccordionPrimitive.Root>
+    </div>
   );
 })
 
