@@ -15,7 +15,8 @@ import {
 } from "@/graphql/queries";
 import { Levels } from "@/consts/arrays";
 import { parseAsInteger, useQueryState } from "nuqs";
-import { validateName } from "./helpers/functions";
+import { filterArr, validateName } from "./helpers/functions";
+import { useSearchParams } from "next/navigation";
 
 
 interface TreeDataItem {
@@ -58,10 +59,18 @@ const Tree = React.forwardRef<
   const [state, setState] = useQueryState('state', { defaultValue: '' });
   const [city, setCity] = useQueryState('city', { defaultValue: '' });
 
+  const searchParams = useSearchParams();
+
   const handleSelectChange = React.useCallback(async (item: TreeDataItem | undefined) => {
     if (!item!.children) {
+      let region = filterArr(data, item!.node?.name)[0];
       switch (item!.level) {
         case 'Cities':
+          if (region.node.name != searchParams.get('region')) setRegion(region.node.name);
+          let citiesCountry = filterArr(region.children, item!.node?.name)[0]
+          if (citiesCountry.node.name != searchParams.get('country')) setCountry(citiesCountry.node.name);
+          let citiesState = filterArr(citiesCountry.children, item!.node?.name)[0]
+          if (citiesState.node.name != searchParams.get('state')) setState(citiesState.node.name);
           setCity(validateName(item!.node?.name));
           break;
 
@@ -69,12 +78,15 @@ const Tree = React.forwardRef<
           const fullStateInfo = await fetchDataByQuery(
             stateQueryBy_StateCode_and_CountryCode(item?.node?.state_code, item?.node?.country_code));
 
-          const state = fullStateInfo.data.state;
+          const stateData = fullStateInfo.data.state;
           const citiesData = await fetchDataByQuery(
-            citiesQueryByStateId(state.id, item!.node.country_code, 30));
+            citiesQueryByStateId(stateData.id, item!.node.country_code, 30));
           item!.children = citiesData.data.cities.edges;
           item!.children?.forEach((item) => item.level = Levels[3]);
           setSelectedItemId(item!.node?.name);
+          if (region.node.name != searchParams.get('region')) setRegion(region.node.name);
+          let statesCountry = filterArr(region.children, item!.node?.name)[0]
+          if (statesCountry.node.name != searchParams.get('country')) setCountry(statesCountry.node.name);
           setState(validateName(item!.node?.name));
           setCity(null);
           break;
@@ -84,6 +96,7 @@ const Tree = React.forwardRef<
           item!.children = statesData.data?.states?.edges;
           item!.children?.forEach((item) => item.level = Levels[2]);
           setSelectedItemId(item!.node?.id);
+          if (region.node.name != searchParams.get('region')) setRegion(region.node.name);
           setCountry(item!.node?.name);
           setState(null);
           setCity(null);
@@ -171,13 +184,13 @@ const TreeItem = React.forwardRef<
 >(({ className, data, selectedItemId, handleSelectChange, expandedItemIds, FolderIcon, ItemIcon, ...props }, ref) => {
   return (
     <div ref={ref} role="tree" className={className} {...props}>
-      <ul>
-        {data instanceof Array ? (
-          data.map((item) => (
-            <li key={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
-              {item.children ? (
-                <AccordionPrimitive.Root type="multiple" defaultValue={expandedItemIds}>
-                  <AccordionPrimitive.Item value={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
+      <AccordionPrimitive.Root type="single" collapsible>
+        <ul>
+          {data instanceof Array ? (
+            data.map((item) => (
+              <li key={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
+                {item.children ? (
+                  <AccordionPrimitive.Item value={validateName(item.node.name)}>
                     <AccordionTrigger
                       className={cn(
                         "px-2 hover:before:opacity-100 before:absolute before:left-0 before:w-full before:opacity-0 before:bg-muted/80 before:h-[1.75rem] before:-z-10",
@@ -197,7 +210,7 @@ const TreeItem = React.forwardRef<
                           aria-hidden="true"
                         />
                       }
-                      <span className="text-sm truncate">{validateName(item.name ?? item.node.name)}</span>
+                      <span className="text-sm truncate" >{validateName(item.name ?? item.node.name)}</span>
                     </AccordionTrigger>
                     <AccordionContent className="pl-6">
                       <TreeItem
@@ -210,28 +223,29 @@ const TreeItem = React.forwardRef<
                       />
                     </AccordionContent>
                   </AccordionPrimitive.Item>
-                </AccordionPrimitive.Root>
-              ) : (
-                <Leaf
-                  item={item}
-                  isSelected={selectedItemId === (item.id ?? item.node.id) ?? validateName(item.node.name)}
-                  onClick={() => handleSelectChange(item)}
-                  Icon={ItemIcon}
-                />
-              )}
+
+                ) : (
+                  <Leaf
+                    item={item}
+                    isSelected={selectedItemId === (item.id ?? item.node.id) ?? validateName(item.node.name)}
+                    onClick={() => handleSelectChange(item)}
+                    Icon={ItemIcon}
+                  />
+                )}
+              </li>
+            ))
+          ) : (
+            <li key={data.id}>
+              <Leaf
+                item={data}
+                isSelected={selectedItemId === (data.id ?? data.node.id) ?? validateName(data.node.name)}
+                onClick={() => handleSelectChange(data)}
+                Icon={ItemIcon}
+              />
             </li>
-          ))
-        ) : (
-          <li key={data.id}>
-            <Leaf
-              item={data}
-              isSelected={selectedItemId === (data.id ?? data.node.id) ?? validateName(data.name)}
-              onClick={() => handleSelectChange(data)}
-              Icon={ItemIcon}
-            />
-          </li>
-        )}
-      </ul></div>
+          )}
+        </ul>
+      </AccordionPrimitive.Root></div>
   );
 })
 
@@ -263,15 +277,15 @@ const Leaf = React.forwardRef<
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, forwardedRef) => (
   <AccordionPrimitive.Header>
     <AccordionPrimitive.Trigger
-      ref={ref}
       className={cn(
         "flex flex-1 w-full items-center py-2 transition-all last:[&[data-state=open]>svg]:rotate-90",
         className
       )}
       {...props}
+      ref={forwardedRef}
     >
       {children}
       <ChevronRight className="h-4 w-4 shrink-0 transition-transform duration-200 text-accent-foreground/50 ml-auto" />
@@ -283,14 +297,15 @@ AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, forwardedRef) => (
   <AccordionPrimitive.Content
-    ref={ref}
+
     className={cn(
       "overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down",
       className
     )}
     {...props}
+    ref={forwardedRef}
   >
     <div className="pb-1 pt-0">{children}</div>
   </AccordionPrimitive.Content>
