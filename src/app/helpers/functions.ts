@@ -15,6 +15,7 @@ export function objectDepth(o: any): any {
   return Object(o) === o ? 1 + Math.max(-1, ...Object.values(o).map(objectDepth)) : 0
 }
 
+// function to return the array (of objects) at the level where the value is found
 export function filterArr(array: TreeDataItem | TreeDataItem[], value: unknown) {
   let find = function (object: object) {
     return Object
