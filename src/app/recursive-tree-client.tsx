@@ -24,8 +24,8 @@ interface TreeDataItem {
   node: {
     id: Number;
     name: string;
-    state_code: string;
-    country_code: string;
+    state_code?: string;
+    country_code?: string;
   };
   id?: string;
   name?: string;
@@ -37,7 +37,7 @@ type TreeProps =
   React.HTMLAttributes<HTMLDivElement> &
   {
     data: TreeDataItem[] | TreeDataItem,
-    initialSlelectedItemId?: string,
+    initialSlelectedItemId?: string | Number | undefined,
     onSelectChange?: (item: TreeDataItem | undefined, data: TreeDataItem[] | TreeDataItem) => void,
     expandAll?: boolean,
     folderIcon?: LucideIcon,
@@ -76,11 +76,11 @@ const Tree = React.forwardRef<
 
         case 'States':
           const fullStateInfo = await fetchDataByQuery(
-            stateQueryBy_StateCode_and_CountryCode(item!.node!.state_code, item!.node!.country_code));
+            stateQueryBy_StateCode_and_CountryCode(item!.node!.state_code!, item!.node!.country_code!));
 
           const stateData = fullStateInfo.data.state;
           const citiesData = await fetchDataByQuery(
-            citiesQueryByStateId(stateData.id, item!.node.country_code, 30));
+            citiesQueryByStateId(stateData.id, item!.node!.country_code!, 30));
           item!.children = citiesData.data.cities.edges;
           item!.children?.forEach((item) => item.level = Levels[3]);
           setSelectedItemId(item!.node?.name);
@@ -125,7 +125,7 @@ const Tree = React.forwardRef<
 
     const ids: string[] = []
 
-    function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string) {
+    function walkTreeItems(items: TreeDataItem[] | TreeDataItem, targetId: string | Number) {
       if (items instanceof Array) {
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < items.length; i++) {
