@@ -76,7 +76,7 @@ const Tree = React.forwardRef<
 
         case 'States':
           const fullStateInfo = await fetchDataByQuery(
-            stateQueryBy_StateCode_and_CountryCode(item?.node?.state_code, item?.node?.country_code));
+            stateQueryBy_StateCode_and_CountryCode(item!.node!.state_code, item!.node!.country_code));
 
           const stateData = fullStateInfo.data.state;
           const citiesData = await fetchDataByQuery(
@@ -129,7 +129,7 @@ const Tree = React.forwardRef<
       if (items instanceof Array) {
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < items.length; i++) {
-          ids.push(items[i]!.id);
+          ids.push(items[i]!.id ?? '');
           if (walkTreeItems(items[i]!, targetId) && !expandAll) {
             return true;
           }

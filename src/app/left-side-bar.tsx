@@ -126,7 +126,7 @@ export default function LeftSideBar({ ...props }) {
       const countriesData = await fetchDataByQuery(countriesQueryByRegion(region));
       regionFieldToUpdate = data.find(i => i.node.name === region);
       regionFieldToUpdate!.children = countriesData.data?.countries.edges;
-      regionFieldToUpdate!.children?.forEach((item: { level: any; }) => item.level = Levels[1]);
+      regionFieldToUpdate!.children?.forEach((item: { level: string; }) => item.level = Levels[1]);
       setSelectedItemId(regionFieldToUpdate?.node.name);
       if (country) {
         const countryData = findInArray(regionFieldToUpdate?.children!, country)
