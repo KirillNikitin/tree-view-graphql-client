@@ -76,7 +76,7 @@ const Tree = React.forwardRef<
 
         case 'States':
           const fullStateInfo = await fetchDataByQuery(
-            stateQueryBy_StateCode_and_CountryCode(item?.node?.state_code, item?.node?.country_code));
+            stateQueryBy_StateCode_and_CountryCode(item!.node?.state_code, item!.node?.country_code));
 
           const stateData = fullStateInfo.data.state;
           const citiesData = await fetchDataByQuery(
@@ -103,14 +103,33 @@ const Tree = React.forwardRef<
           break;
 
         default:
-          const countriesData = await fetchDataByQuery(countriesQueryByRegion(item!.node?.name));
-          item!.children = countriesData.data?.countries.edges;
-          item!.children?.forEach((item) => item.level = Levels[1]);
+          if (item?.node.hasOwnProperty('state_id')) {
+            if (region.node.name != searchParams.get('region')) setRegion(region.node.name);
+            let citiesCountry = filterArr(region.children, item!.node?.name)[0]
+            if (citiesCountry.node.name != searchParams.get('country')) setCountry(citiesCountry.node.name);
+            let citiesState = filterArr(citiesCountry.children, item!.node?.name)[0]
+            if (citiesState.node.name != searchParams.get('state')) setState(citiesState.node.name);
+            setCity(item?.node.name);
+          } else if (item?.node.hasOwnProperty('country_id') && item.node.hasOwnProperty('state_code')) {
+            if (region.node.name != searchParams.get('region')) setRegion(region.node.name);
+            let statesCountry = filterArr(region.children, item!.node?.name)[0]
+            if (statesCountry.node.name != searchParams.get('country')) setCountry(statesCountry.node.name);
+            setState(item?.node.name);
+            setCity(null);
+          } else if (item?.node.hasOwnProperty('capital')) {
+            setCountry(item!.node?.name);
+            setState(null);
+            setCity(null);
+          } else {
+            const countriesData = await fetchDataByQuery(countriesQueryByRegion(item!.node?.name));
+            item!.children = countriesData.data?.countries.edges;
+            item!.children?.forEach((item) => item.level = Levels[1]);
+            setRegion(searchParams.get('region') ? searchParams.get('region') : item!.node?.name);
+            setCountry(null);
+            setState(null);
+            setCity(null);
+          }
           setSelectedItemId(item!.node?.id);
-          setRegion(item!.node?.name);
-          setCountry(null);
-          setState(null);
-          setCity(null);
       }
     }
     if (onSelectChange) {
@@ -129,7 +148,7 @@ const Tree = React.forwardRef<
       if (items instanceof Array) {
         // eslint-disable-next-line @typescript-eslint/prefer-for-of
         for (let i = 0; i < items.length; i++) {
-          ids.push(items[i]!.id);
+          ids.push(items[i]!.id ?? '');
           if (walkTreeItems(items[i]!, targetId) && !expandAll) {
             return true;
           }
@@ -188,7 +207,7 @@ const TreeItem = React.forwardRef<
         <ul>
           {data instanceof Array ? (
             data.map((item) => (
-              <li key={(item.id ?? item.node.id) ?? validateName(item.node.name)}>
+              <li key={validateName(item.node.name)}>
                 {item.children ? (
                   <AccordionPrimitive.Item value={validateName(item.node.name)}>
                     <AccordionTrigger
@@ -223,6 +242,7 @@ const TreeItem = React.forwardRef<
                       />
                     </AccordionContent>
                   </AccordionPrimitive.Item>
+
                 ) : (
                   <Leaf
                     item={item}
@@ -244,8 +264,7 @@ const TreeItem = React.forwardRef<
             </li>
           )}
         </ul>
-      </AccordionPrimitive.Root>
-    </div>
+      </AccordionPrimitive.Root></div>
   );
 })
 
